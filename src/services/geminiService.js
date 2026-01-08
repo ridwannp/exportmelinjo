@@ -176,8 +176,8 @@ export const getChatResponse = async (userMessage) => {
     // Actually listModels is on the genAI instance or via API. 
     // SDK doesn't have direct listModels on instance in some versions, but let's try to just use a safe model.
     
-    // Use the standard gemini-pro model which is widely available
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use gemini-flash-latest as a safer alias
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
     
     console.log('Requesting response from Gemini...');
     const result = await model.generateContent([
@@ -191,11 +191,18 @@ export const getChatResponse = async (userMessage) => {
     console.error('Error getting chat response:', error);
     
     // Improved error message
+    let errorMessage = 'Maaf, terjadi kesalahan. ';
+    
     if (error.message.includes('404') || error.message.includes('not found')) {
-      return 'Maaf, model AI sedang tidak dapat diakses. Mohon pastikan API Key Anda valid dan mendukung model Gemini.';
+      errorMessage = 'Maaf, model AI tidak ditemukan (404). Pastikan API Key valid. ';
+    } else if (error.message.includes('429')) {
+      errorMessage = 'Maaf, batas penggunaan API tercapai (429). Silakan tunggu sebentar. ';
+    } else if (error.message.includes('403')) {
+      errorMessage = 'Maaf, akses ditolak (403). API Key mungkin tidak valid atau terbatas. ';
     }
     
-    return 'Maaf, terjadi kesalahan. Silakan coba lagi atau hubungi kami langsung via WhatsApp di +62 812-3456-7890';
+    // Append raw error for debugging
+    return `${errorMessage} (Debug: ${error.message})`;
   }
 };
 
